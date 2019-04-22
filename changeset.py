@@ -99,23 +99,27 @@ class Op:
         """Clone an op"""
         return type(self)(self.opcode, self.chars, self.lines, self.attribs)
 
+    def copy(self, op2):
+        op2.opcode = self.opcode
+        op2.chars = self.chars
+        op2.lines = self.lines
+        op2.attribs = self.attribs
+
+    @staticmethod
+    def copy_op(op1: 'Op', op2: 'Op'):
+        """Copy the Op object to another one in JavaScript
+
+        :param op1: src Op
+        :param op2: dest Op
+
+        """
+        op2['opcode'] = op1['opcode']
+        op2['chars'] = op1['chars']
+        op2['lines'] = op1['lines']
+        op2['attribs'] = op1['attribs']
+
 
 changeset.newOp = Op.new_op
 changeset.clearOp = Op.clear
 changeset.cloneOp = Op.clone
-
-
-def copy_op(op1: Op, op2: Op) -> None:
-    """Copy op1 to op2
-
-    :param op1: src Op
-    :param op2: dest Op
-
-    """
-    op2['opcode'] = op1['opcode']
-    op2['chars'] = op1['chars']
-    op2['lines'] = op1['lines']
-    op2['attribs'] = op1['attribs']
-
-
-changeset.copyOp = copy_op
+changeset.copyOp = Op.copy_op
