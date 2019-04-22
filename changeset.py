@@ -64,16 +64,20 @@ changeset.opIterator = op_iterator
 
 
 class Op:
-    def __init__(self, opcode: Optional[str] = None):
+    def __init__(self,
+                 opcode: Optional[str] = None,
+                 chars: int = 0,
+                 lines: int = 0,
+                 attribs: str = ''):
         """Create a new Op object
 
         :param opcode: the type operation of the Op object
 
         """
         self.opcode = opcode or ''
-        self.chars = 0
-        self.lines = 0
-        self.attribs = ''
+        self.chars = chars
+        self.lines = lines
+        self.attribs = attribs
 
     @staticmethod
     def new_op(optOpcode: Optional[str] = None) -> 'Op':
@@ -91,24 +95,14 @@ class Op:
         self.lines = 0
         self.attribs = ''
 
+    def clone(self):
+        """Clone an op"""
+        return type(self)(self.opcode, self.chars, self.lines, self.attribs)
+
 
 changeset.newOp = Op.new_op
 changeset.clearOp = Op.clear
-
-
-def clone_op(op: Op) -> None:
-    """Clone an op
-
-    :param op: Op to be cloned
-
-    """
-    return {'opcode': op.opcode,
-            'chars': op.chars,
-            'lines': op.lines,
-            'attribs': op.attribs}
-
-
-changeset.cloneOp = clone_op
+changeset.cloneOp = Op.clone
 
 
 def copy_op(op1: Op, op2: Op) -> None:
