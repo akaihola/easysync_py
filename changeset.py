@@ -46,7 +46,7 @@ def op_iterator(opsStr: str, optStartIndex: int) -> Dict:
             op.chars = changeset.parseNum(regexResult.group(4))
             regexResult = nextRegexMatch()
         else:
-            changeset.clearOp(op)
+            op.clear()
         return op
 
     def hasNext():
@@ -84,23 +84,16 @@ class Op:
         """
         return Op(optOpcode.to_python())
 
+    def clear(self):
+        """Clean an Op object"""
+        self.opcode = ''
+        self.chars = 0
+        self.lines = 0
+        self.attribs = ''
+
 
 changeset.newOp = Op.new_op
-
-
-def clear_op(op: Op) -> None:
-    """Clean an Op object
-
-    :param op: object to be cleared
-
-    """
-    op.opcode = ''
-    op.chars = 0
-    op.lines = 0
-    op.attribs = ''
-
-
-changeset.clearOp = clear_op
+changeset.clearOp = Op.clear
 
 
 def clone_op(op: Op) -> None:
