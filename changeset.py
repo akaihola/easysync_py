@@ -91,3 +91,18 @@ def new_op(optOpcode: Optional[str] = None) -> Dict[str, Union[str, int]]:
 
 
 changeset.newOp = new_op
+
+
+def clone_op(op: Dict[str, Union[str, int]]) -> None:
+    """Clone an op
+
+    :param op: Op to be cloned
+
+    """
+    return {'opcode': op.opcode,
+            'chars': op.chars,
+            'lines': op.lines,
+            'attribs': op.attribs}
+
+
+changeset.cloneOp = clone_op
