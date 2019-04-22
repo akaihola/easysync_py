@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Optional, Union
+from typing import Dict, Optional
 
 from js_module import eval_js_module
 
@@ -34,9 +34,9 @@ def op_iterator(opsStr: str, optStartIndex: int) -> Dict:
         return result
 
     regexResult = nextRegexMatch()
-    obj = changeset.newOp()
+    obj = Op()
 
-    def next(optObj):
+    def next(optObj: Optional[Op]) -> Op:
         nonlocal regexResult
         op = optObj.to_python() or obj
         if regexResult.group(0):
@@ -63,7 +63,32 @@ def op_iterator(opsStr: str, optStartIndex: int) -> Dict:
 changeset.opIterator = op_iterator
 
 
-def clear_op(op: Dict[str, Union[str, int]]) -> None:
+class Op:
+    def __init__(self, opcode: Optional[str] = None):
+        """Create a new Op object
+
+        :param opcode: the type operation of the Op object
+
+        """
+        self.opcode = opcode or ''
+        self.chars = 0
+        self.lines = 0
+        self.attribs = ''
+
+    @staticmethod
+    def new_op(optOpcode: Optional[str] = None) -> 'Op':
+        """Create a new Op object from JavaScript
+
+        :param optOpcode: the type operation of the Op object
+
+        """
+        return Op(optOpcode.to_python())
+
+
+changeset.newOp = Op.new_op
+
+
+def clear_op(op: Op) -> None:
     """Clean an Op object
 
     :param op: object to be cleared
@@ -78,22 +103,7 @@ def clear_op(op: Dict[str, Union[str, int]]) -> None:
 changeset.clearOp = clear_op
 
 
-def new_op(optOpcode: Optional[str] = None) -> Dict[str, Union[str, int]]:
-    """Create a new Op object
-
-    :param optOpcode: the type operation of the Op object
-
-    """
-    return {'opcode': optOpcode.to_python() or '',
-            'chars': 0,
-            'lines': 0,
-            'attribs': ''}
-
-
-changeset.newOp = new_op
-
-
-def clone_op(op: Dict[str, Union[str, int]]) -> None:
+def clone_op(op: Op) -> None:
     """Clone an op
 
     :param op: Op to be cloned
@@ -108,8 +118,7 @@ def clone_op(op: Dict[str, Union[str, int]]) -> None:
 changeset.cloneOp = clone_op
 
 
-def copy_op(op1: Dict[str, Union[str, int]],
-            op2: Dict[str, Union[str, int]]) -> None:
+def copy_op(op1: Op, op2: Op) -> None:
     """Copy op1 to op2
 
     :param op1: src Op
