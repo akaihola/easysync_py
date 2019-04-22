@@ -106,3 +106,20 @@ def clone_op(op: Dict[str, Union[str, int]]) -> None:
 
 
 changeset.cloneOp = clone_op
+
+
+def copy_op(op1: Dict[str, Union[str, int]],
+            op2: Dict[str, Union[str, int]]) -> None:
+    """Copy op1 to op2
+
+    :param op1: src Op
+    :param op2: dest Op
+
+    """
+    op2['opcode'] = op1['opcode']
+    op2['chars'] = op1['chars']
+    op2['lines'] = op1['lines']
+    op2['attribs'] = op1['attribs']
+
+
+changeset.copyOp = copy_op
