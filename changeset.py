@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 from js_module import eval_js_module
 
@@ -63,7 +63,22 @@ def op_iterator(opsStr: str, optStartIndex: int) -> Dict:
 changeset.opIterator = op_iterator
 
 
-def new_op(optOpcode: Optional[str] = None):
+def clear_op(op: Dict[str, Union[str, int]]) -> None:
+    """Clean an Op object
+
+    :param op: object to be cleared
+
+    """
+    op.opcode = ''
+    op.chars = 0
+    op.lines = 0
+    op.attribs = ''
+
+
+changeset.clearOp = clear_op
+
+
+def new_op(optOpcode: Optional[str] = None) -> Dict[str, Union[str, int]]:
     """Create a new Op object
 
     :param optOpcode: the type operation of the Op object
