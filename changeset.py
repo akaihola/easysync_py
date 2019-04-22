@@ -1,5 +1,5 @@
 import re
-from typing import Dict
+from typing import Dict, Optional
 
 from js_module import eval_js_module
 
@@ -61,3 +61,18 @@ def op_iterator(opsStr: str, optStartIndex: int) -> Dict:
 
 
 changeset.opIterator = op_iterator
+
+
+def new_op(optOpcode: Optional[str] = None):
+    """Create a new Op object
+
+    :param optOpcode: the type operation of the Op object
+
+    """
+    return {'opcode': optOpcode.to_python() or '',
+            'chars': 0,
+            'lines': 0,
+            'attribs': ''}
+
+
+changeset.newOp = new_op
