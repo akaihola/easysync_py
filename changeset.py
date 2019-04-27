@@ -1,6 +1,6 @@
 import re
 import string
-from typing import Optional
+from typing import Dict, Optional, Union
 
 from js2py.base import PyJs
 
@@ -16,7 +16,9 @@ def parseNum(s: str) -> int:
     :return: parsed number
 
     """
-    return int(s.to_python(), 36)
+    if isinstance(s, PyJs):
+        s = s.to_python()
+    return int(s, 36)
 
 
 changeset.parseNum = parseNum
@@ -161,3 +163,27 @@ changeset.newOp = Op.new_op
 changeset.clearOp = Op.clear
 changeset.cloneOp = Op.clone
 changeset.copyOp = Op.copy_op
+
+
+def unpack(cs: str) -> Dict[str, Union[int, str]]:
+    if isinstance(cs, PyJs):
+        cs = cs.to_python()
+    headerRegex = re.compile(r'Z:([0-9a-z]+)([><])([0-9a-z]+)|')
+    headerMatch = headerRegex.search(cs)
+    if not headerMatch or not headerMatch.group(0):
+        changeset.error(f'Not a changeset: {cs}')
+    oldLen = parseNum(headerMatch.group(1))
+    changeSign = 1 if headerMatch.group(2) == '>' else -1
+    changeMag = parseNum(headerMatch.group(3))
+    newLen = oldLen + changeSign * changeMag
+    opsStart = len(headerMatch.group(0))
+    opsEnd = cs.find("$")
+    if opsEnd < 0:
+        opsEnd = len(cs)
+    return {'oldLen': oldLen,
+            'newLen': newLen,
+            'ops': cs[opsStart:opsEnd],
+            'charBank': cs[opsEnd + 1:]}
+
+
+changeset.unpack = unpack
