@@ -190,3 +190,24 @@ def unpack(cs: str) -> Dict[str, Union[int, str]]:
 
 
 changeset.unpack = unpack
+
+
+def pack(oldLen: int, newLen: int, opsStr: str, bank: str) -> str:
+    """Pack a Changeset object into a string
+
+    :param oldLen: Old length of the Changeset
+    :param newLen: New length of the Changeset
+    :param opsStr: String encoding of the changes to be made
+    :param bank: Charbank of the Changeset
+    :return: a Changeset string
+
+    """
+    oldLen, newLen = to_python(oldLen), to_python(newLen)
+    opsStr, bank = to_python(opsStr), to_python(bank)
+    lenDiff = newLen - oldLen
+    lenDiffStr = (f'>{numToString(lenDiff)}' if lenDiff >= 0
+                  else f'<{numToString(-lenDiff)}')
+    return f'Z:{numToString(oldLen)}{lenDiffStr}{opsStr}${bank}'
+
+
+changeset.pack = pack
