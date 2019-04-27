@@ -166,6 +166,12 @@ changeset.copyOp = Op.copy_op
 
 
 def unpack(cs: str) -> Dict[str, Union[int, str]]:
+    """Unpack a string encoded Changeset into a proper Changeset object
+
+    :param cs: String encoded Changeset
+    :return: a Changeset data structure
+
+    """
     if isinstance(cs, PyJs):
         cs = cs.to_python()
     headerRegex = re.compile(r'Z:([0-9a-z]+)([><])([0-9a-z]+)|')
