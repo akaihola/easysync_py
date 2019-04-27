@@ -2,7 +2,7 @@ import re
 import string
 from typing import Dict, Optional, Union
 
-from js2py.base import PyJs
+from js2py.base import to_python
 
 from js_module import eval_js_module
 
@@ -16,8 +16,7 @@ def parseNum(s: str) -> int:
     :return: parsed number
 
     """
-    if isinstance(s, PyJs):
-        s = s.to_python()
+    s = to_python(s)
     return int(s, 36)
 
 
@@ -34,7 +33,7 @@ def numToString(num: int) -> str:
     :return: number encoded as a base-36 string
 
     """
-    num = num.to_python()
+    num = to_python(num)
     base36 = ''
     while num:
         num, i = divmod(num, 36)
@@ -54,12 +53,12 @@ class OpIterator:
         :return: type object iterator
 
         """
-        self.opsStr = opsStr.to_python()
+        self.opsStr = to_python(opsStr)
         self.regex = re.compile(
             r'((?:\*[0-9a-z]+)*)(?:\|([0-9a-z]+))?([-+=])([0-9a-z]+)'
             r'|\?'
             r'|')
-        self.startIndex = optStartIndex.to_python() or 0
+        self.startIndex = to_python(optStartIndex) or 0
         self.curIndex = self.startIndex
         self.prevIndex = self.curIndex
         self.regexResult = self.nextRegexMatch()
@@ -80,8 +79,7 @@ class OpIterator:
         return result
 
     def next(self, optObj: Optional['Op'] = None) -> 'Op':
-        if isinstance(optObj, PyJs):
-            optObj = optObj.to_python()
+        optObj = to_python(optObj)
         op = optObj or self.obj
         if self.regexResult.group(0):
             op.attribs = self.regexResult.group(1)
@@ -126,7 +124,7 @@ class Op:
         :param optOpcode: the type operation of the Op object
 
         """
-        return Op(optOpcode.to_python())
+        return Op(to_python(optOpcode))
 
     def clear(self):
         """Clean an Op object"""
@@ -172,8 +170,7 @@ def unpack(cs: str) -> Dict[str, Union[int, str]]:
     :return: a Changeset data structure
 
     """
-    if isinstance(cs, PyJs):
-        cs = cs.to_python()
+    cs = to_python(cs)
     headerRegex = re.compile(r'Z:([0-9a-z]+)([><])([0-9a-z]+)|')
     headerMatch = headerRegex.search(cs)
     if not headerMatch or not headerMatch.group(0):
