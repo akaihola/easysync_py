@@ -1,66 +1,69 @@
 import re
-from typing import Dict, Optional
+from typing import Optional
+
+from js2py.base import PyJs
 
 from js_module import eval_js_module
 
 changeset = eval_js_module('Changeset.js').exports
 
 
-def op_iterator(opsStr: str, optStartIndex: int) -> Dict:
-    """Create an iterator which decodes string changeset operations
+class OpIterator:
+    def __init__(self, opsStr: str, optStartIndex: int):
+        """Create an iterator which decodes string changeset operations
 
-    :param opsStr: String encoding of the change operations to be performed
-    :param optStartIndex: from where in the string should the iterator start
-    :return: type object iterator
+        :param opsStr: String encoding of the change operations to be performed
+        :param optStartIndex: from where in the string should the iterator start
+        :return: type object iterator
 
-    """
-    opsStr = opsStr.to_python()
-    regex = re.compile(
-        r'((?:\*[0-9a-z]+)*)(?:\|([0-9a-z]+))?([-+=])([0-9a-z]+)'
-        r'|\?'
-        r'|')
-    startIndex = optStartIndex.to_python() or 0
-    curIndex = startIndex
-    prevIndex = curIndex
+        """
+        self.opsStr = opsStr.to_python()
+        self.regex = re.compile(
+            r'((?:\*[0-9a-z]+)*)(?:\|([0-9a-z]+))?([-+=])([0-9a-z]+)'
+            r'|\?'
+            r'|')
+        self.startIndex = optStartIndex.to_python() or 0
+        self.curIndex = self.startIndex
+        self.prevIndex = self.curIndex
+        self.regexResult = self.nextRegexMatch()
+        self.obj = Op()
 
-    def nextRegexMatch():
-        nonlocal curIndex, prevIndex
-        prevIndex = curIndex
-        regex_lastIndex = curIndex
-        result = regex.search(opsStr, pos=regex_lastIndex)
-        curIndex = result.end()
+    @staticmethod
+    def new_op(opsStr: str, optStartIndex: int):
+        """JavaScript compatibility constructor"""
+        return OpIterator(opsStr, optStartIndex)
+
+    def nextRegexMatch(self):
+        self.prevIndex = self.curIndex
+        regex_lastIndex = self.curIndex
+        result = self.regex.search(self.opsStr, pos=regex_lastIndex)
+        self.curIndex = result.end()
         if result.group(0) == '?':
             changeset.error("Hit error opcode in op stream")
         return result
 
-    regexResult = nextRegexMatch()
-    obj = Op()
-
-    def next(optObj: Optional[Op]) -> Op:
-        nonlocal regexResult
-        op = optObj.to_python() or obj
-        if regexResult.group(0):
-            op.attribs = regexResult.group(1)
-            op.lines = changeset.parseNum(regexResult.group(2) or 0)
-            op.opcode = regexResult.group(3)
-            op.chars = changeset.parseNum(regexResult.group(4))
-            regexResult = nextRegexMatch()
+    def next(self, optObj: Optional['Op'] = None) -> 'Op':
+        if isinstance(optObj, PyJs):
+            optObj = optObj.to_python()
+        op = optObj or self.obj
+        if self.regexResult.group(0):
+            op.attribs = self.regexResult.group(1)
+            op.lines = changeset.parseNum(self.regexResult.group(2) or 0)
+            op.opcode = self.regexResult.group(3)
+            op.chars = changeset.parseNum(self.regexResult.group(4))
+            self.regexResult = self.nextRegexMatch()
         else:
             op.clear()
         return op
 
-    def hasNext():
-        return bool(regexResult.group(0))
+    def hasNext(self):
+        return bool(self.regexResult.group(0))
 
-    def lastIndex():
-        return prevIndex
-
-    return {'next': next,
-            'hasNext': hasNext,
-            'lastIndex': lastIndex}
+    def lastIndex(self):
+        return self.prevIndex
 
 
-changeset.opIterator = op_iterator
+changeset.opIterator = OpIterator.new_op
 
 
 class Op:
