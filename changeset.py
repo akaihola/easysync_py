@@ -1,4 +1,5 @@
 import re
+import string
 from typing import Optional
 
 from js2py.base import PyJs
@@ -6,6 +7,40 @@ from js2py.base import PyJs
 from js_module import eval_js_module
 
 changeset = eval_js_module('Changeset.js').exports
+
+
+def parseNum(s: str) -> int:
+    """Parse a number from string base 36
+
+    :param s: string of the number in base 36
+    :return: parsed number
+
+    """
+    return int(s.to_python(), 36)
+
+
+changeset.parseNum = parseNum
+
+
+BASE36_ALPHABET = string.digits + string.ascii_lowercase
+
+
+def numToString(num: int) -> str:
+    """Write a number in base 36 and return it as a string
+
+    :param num: number to encode
+    :return: number encoded as a base-36 string
+
+    """
+    num = num.to_python()
+    base36 = ''
+    while num:
+        num, i = divmod(num, 36)
+        base36 = BASE36_ALPHABET[i] + base36
+    return base36 or BASE36_ALPHABET[0]
+
+
+changeset.numToString = numToString
 
 
 class OpIterator:
@@ -48,7 +83,7 @@ class OpIterator:
         op = optObj or self.obj
         if self.regexResult.group(0):
             op.attribs = self.regexResult.group(1)
-            op.lines = changeset.parseNum(self.regexResult.group(2) or 0)
+            op.lines = changeset.parseNum(self.regexResult.group(2) or '0')
             op.opcode = self.regexResult.group(3)
             op.chars = changeset.parseNum(self.regexResult.group(4))
             self.regexResult = self.nextRegexMatch()
