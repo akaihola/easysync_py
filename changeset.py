@@ -9,7 +9,17 @@ from js_module import eval_js_module
 changeset = eval_js_module('Changeset.js').exports
 
 
-# changeset.error = HJs(error)
+class EasySyncError(Exception):
+    pass
+
+
+def error(msg: str):
+    raise EasySyncError(msg)
+
+
+changeset.error = HJs(error)
+
+
 # changeset.assert = HJs(assert)
 
 
