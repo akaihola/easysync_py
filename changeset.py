@@ -9,6 +9,10 @@ from js_module import eval_js_module
 changeset = eval_js_module('Changeset.js').exports
 
 
+# changeset.error = HJs(error)
+# changeset.assert = HJs(assert)
+
+
 def parseNum(s: str) -> int:
     """Parse a number from string base 36
 
@@ -40,6 +44,11 @@ def numToString(num: int) -> str:
 
 
 changeset.numToString = HJs(numToString)
+
+
+#changeset.toBaseTen = HJs(toBaseTen)
+#changeset.oldLen = HJs(oldLen)
+#changeset.newLen = HJs(newLen)
 
 
 class OpIterator:
@@ -141,10 +150,22 @@ class Op:
         op2.attribs = op1.attribs
 
 
-changeset.newOp = HJs(Op)
 changeset.clearOp = HJs(Op.clear)
+changeset.newOp = HJs(Op)
 changeset.cloneOp = HJs(Op.clone)
 changeset.copyOp = HJs(Op.copy_op)
+
+
+# changeset.opString = HJs(opString)
+# changeset.stringOp = HJs(stringOp)
+# changeset.checkRep = HJs(checkRep)
+# changeset.smartOpAssembler = HJs(smartOpAssembler)
+# changeset.mergingOpAssembler = HJs(mergingOpAssembler)
+# changeset.opAssembler = HJs(opAssembler)
+# changeset.stringIterator = HJs(stringIterator)
+# changeset.stringAssembler = HJs(stringAssembler)
+# changeset.textLinesMutator = HJs(textLinesMutator)
+# changeset.applyZip = HJs(applyZip)
 
 
 def unpack(cs: str) -> Dict[str, Union[int, str]]:
@@ -192,3 +213,42 @@ def pack(oldLen: int, newLen: int, opsStr: str, bank: str) -> str:
 
 
 changeset.pack = HJs(pack)
+
+
+# changeset.applyToText = HJs(applyToText)
+# changeset.mutateTextLines = HJs(mutateTextLines)
+# changeset.composeAttributes = HJs(composeAttributes)
+# changeset._slicerZipperFunc = HJs(_slicerZipperFunc)
+# changeset.applyToAttribution = HJs(applyToAttribution)
+# changeset.mutateAttributionLines = HJs(mutateAttributionLines)
+# changeset.joinAttributionLines = HJs(joinAttributionLines)
+# changeset.splitAttributionLines = HJs(splitAttributionLines)
+# changeset.splitTextLines = HJs(splitTextLines)
+# changeset.compose = HJs(compose)
+# changeset.attributeTester = HJs(attributeTester)
+# changeset.identity = HJs(identity)
+# changeset.makeSplice = HJs(makeSplice)
+# changeset.toSplices = HJs(toSplices)
+# changeset.characterRangeFollow = HJs(characterRangeFollow)
+# changeset.moveOpsToNewPool = HJs(moveOpsToNewPool)
+# changeset.makeAttribution = HJs(makeAttribution)
+# changeset.eachAttribNumber = HJs(eachAttribNumber)
+# changeset.filterAttribNumbers = HJs(filterAttribNumbers)
+# changeset.mapAttribNumbers = HJs(mapAttribNumbers)
+# changeset.makeAText = HJs(makeAText)
+# changeset.applyToAText = HJs(applyToAText)
+# changeset.cloneAText = HJs(cloneAText)
+# changeset.copyAText = HJs(copyAText)
+# changeset.appendATextToAssembler = HJs(appendATextToAssembler)
+# changeset.prepareForWire = HJs(prepareForWire)
+# changeset.isIdentity = HJs(isIdentity)
+# changeset.opAttributeValue = HJs(opAttributeValue)
+# changeset.attribsAttributeValue = HJs(attribsAttributeValue)
+# changeset.builder = HJs(builder)
+# changeset.makeAttribsString = HJs(makeAttribsString)
+# changeset.subattribution = HJs(subattribution)
+# changeset.inverse = HJs(inverse)
+# changeset.follow = HJs(follow)
+# changeset.followAttributes = HJs(followAttributes)
+# changeset.composeWithDeletions = HJs(composeWithDeletions)
+# changeset._slicerZipperFuncWithDeletions = HJs(_slicerZipperFuncWithDeletions)
