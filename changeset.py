@@ -20,7 +20,12 @@ def error(msg: str):
 changeset.error = HJs(error)
 
 
-# changeset.assert = HJs(assert)
+def assert_(b: bool, *msgParts):
+    if not b:
+        error(f'Failed assertion: {"".join(str(p) for p in msgParts)}')
+
+
+setattr(changeset, 'assert', HJs(assert_))
 
 
 def parseNum(s: str) -> int:
