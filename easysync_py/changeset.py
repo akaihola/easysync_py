@@ -3,10 +3,12 @@ import string
 from typing import Dict, Optional, Union
 
 from js2py.base import HJs
+from pkg_resources import resource_filename
 
-from js_module import eval_js_module
+from easysync_py.js_module import eval_js_module
 
-changeset = eval_js_module('Changeset.js').exports
+JS_PATH = resource_filename('easysync_py', 'Changeset.js')
+changeset = eval_js_module(JS_PATH).exports
 
 
 class EasySyncError(Exception):

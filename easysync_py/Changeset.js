@@ -35,11 +35,11 @@ var AttributePool = require("./AttributePool");
  * This method is called whenever there is an error in the sync process
  * @param msg {string} Just some message
  */
-exports.error = function error(msg) {
-  var e = new Error(msg);
-  e.easysync = true;
-  throw e;
-};
+// exports.error = function error(msg) {
+//   var e = new Error(msg);
+//   e.easysync = true;
+//   throw e;
+// };
 
 /**
  * This method is used for assertions with Messages 
@@ -47,30 +47,30 @@ exports.error = function error(msg) {
  * @param b {boolean} assertion condition
  * @param msgParts {string} error to be passed if it fails
  */
-exports.assert = function assert(b, msgParts) {
-  if (!b) {
-    var msg = Array.prototype.slice.call(arguments, 1).join('');
-    exports.error("Failed assertion: " + msg);
-  }
-};
+// exports.assert = function assert(b, msgParts) {
+//   if (!b) {
+//     var msg = Array.prototype.slice.call(arguments, 1).join('');
+//     exports.error("Failed assertion: " + msg);
+//   }
+// };
 
 /**
  * Parses a number from string base 36
  * @param str {string} string of the number in base 36
  * @returns {int} number
  */
-exports.parseNum = function (str) {
-  return parseInt(str, 36);
-};
+// exports.parseNum = function (str) {
+//   return parseInt(str, 36);
+// };
 
 /**
  * Writes a number in base 36 and puts it in a string
  * @param num {int} number
  * @returns {string} string
  */
-exports.numToString = function (num) {
-  return num.toString(36).toLowerCase();
-};
+// exports.numToString = function (num) {
+//   return num.toString(36).toLowerCase();
+// };
 
 /**
  * Converts stuff before $ to base 10
@@ -115,104 +115,104 @@ exports.newLen = function (cs) {
  * @param optStartIndex {int} from where in the string should the iterator start 
  * @return {Op} type object iterator 
  */
-exports.opIterator = function (opsStr, optStartIndex) {
-  //print(opsStr);
-  var regex = /((?:\*[0-9a-z]+)*)(?:\|([0-9a-z]+))?([-+=])([0-9a-z]+)|\?|/g;
-  var startIndex = (optStartIndex || 0);
-  var curIndex = startIndex;
-  var prevIndex = curIndex;
-
-  function nextRegexMatch() {
-    prevIndex = curIndex;
-    var result;
-    regex.lastIndex = curIndex;
-    result = regex.exec(opsStr);
-    curIndex = regex.lastIndex;
-    if (result[0] == '?') {
-      exports.error("Hit error opcode in op stream");
-    }
-  
-    return result;
-  }
-  var regexResult = nextRegexMatch();
-  var obj = exports.newOp();
-
-  function next(optObj) {
-    var op = (optObj || obj);
-    if (regexResult[0]) {
-      op.attribs = regexResult[1];
-      op.lines = exports.parseNum(regexResult[2] || 0);
-      op.opcode = regexResult[3];
-      op.chars = exports.parseNum(regexResult[4]);
-      regexResult = nextRegexMatch();
-    } else {
-      exports.clearOp(op);
-    }
-    return op;
-  }
-
-  function hasNext() {
-    return !!(regexResult[0]);
-  }
-
-  function lastIndex() {
-    return prevIndex;
-  }
-  return {
-    next: next,
-    hasNext: hasNext,
-    lastIndex: lastIndex
-  };
-};
+// exports.opIterator = function (opsStr, optStartIndex) {
+//   //print(opsStr);
+//   var regex = /((?:\*[0-9a-z]+)*)(?:\|([0-9a-z]+))?([-+=])([0-9a-z]+)|\?|/g;
+//   var startIndex = (optStartIndex || 0);
+//   var curIndex = startIndex;
+//   var prevIndex = curIndex;
+//
+//   function nextRegexMatch() {
+//     prevIndex = curIndex;
+//     var result;
+//     regex.lastIndex = curIndex;
+//     result = regex.exec(opsStr);
+//     curIndex = regex.lastIndex;
+//     if (result[0] == '?') {
+//       exports.error("Hit error opcode in op stream");
+//     }
+//
+//     return result;
+//   }
+//   var regexResult = nextRegexMatch();
+//   var obj = exports.newOp();
+//
+//   function next(optObj) {
+//     var op = (optObj || obj);
+//     if (regexResult[0]) {
+//       op.attribs = regexResult[1];
+//       op.lines = exports.parseNum(regexResult[2] || 0);
+//       op.opcode = regexResult[3];
+//       op.chars = exports.parseNum(regexResult[4]);
+//       regexResult = nextRegexMatch();
+//     } else {
+//       exports.clearOp(op);
+//     }
+//     return op;
+//   }
+//
+//   function hasNext() {
+//     return !!(regexResult[0]);
+//   }
+//
+//   function lastIndex() {
+//     return prevIndex;
+//   }
+//   return {
+//     next: next,
+//     hasNext: hasNext,
+//     lastIndex: lastIndex
+//   };
+// };
 
 /**
  * Cleans an Op object
  * @param {Op} object to be cleared
  */
-exports.clearOp = function (op) {
-  op.opcode = '';
-  op.chars = 0;
-  op.lines = 0;
-  op.attribs = '';
-};
+// exports.clearOp = function (op) {
+//   op.opcode = '';
+//   op.chars = 0;
+//   op.lines = 0;
+//   op.attribs = '';
+// };
 
 /**
  * Creates a new Op object
  * @param optOpcode the type operation of the Op object
  */
-exports.newOp = function (optOpcode) {
-  return {
-    opcode: (optOpcode || ''),
-    chars: 0,
-    lines: 0,
-    attribs: ''
-  };
-};
+// exports.newOp = function (optOpcode) {
+//   return {
+//     opcode: (optOpcode || ''),
+//     chars: 0,
+//     lines: 0,
+//     attribs: ''
+//   };
+// };
 
 /**
  * Clones an Op
  * @param op Op to be cloned
  */
-exports.cloneOp = function (op) {
-  return {
-    opcode: op.opcode,
-    chars: op.chars,
-    lines: op.lines,
-    attribs: op.attribs
-  };
-};
+// exports.cloneOp = function (op) {
+//   return {
+//     opcode: op.opcode,
+//     chars: op.chars,
+//     lines: op.lines,
+//     attribs: op.attribs
+//   };
+// };
 
 /**
  * Copies op1 to op2
  * @param op1 src Op
  * @param op2 dest Op
  */
-exports.copyOp = function (op1, op2) {
-  op2.opcode = op1.opcode;
-  op2.chars = op1.chars;
-  op2.lines = op1.lines;
-  op2.attribs = op1.attribs;
-};
+// exports.copyOp = function (op1, op2) {
+//   op2.opcode = op1.opcode;
+//   op2.chars = op1.chars;
+//   op2.lines = op1.lines;
+//   op2.attribs = op1.attribs;
+// };
 
 /**
  * Writes the Op in a string the way that changesets need it
@@ -867,26 +867,26 @@ exports.applyZip = function (in1, idx1, in2, idx2, func) {
  * @params cs {string} String encoded Changeset
  * @returns {Changeset} a Changeset class
  */
-exports.unpack = function (cs) {
-  var headerRegex = /Z:([0-9a-z]+)([><])([0-9a-z]+)|/;
-  var headerMatch = headerRegex.exec(cs);
-  if ((!headerMatch) || (!headerMatch[0])) {
-    exports.error("Not a exports: " + cs);
-  }
-  var oldLen = exports.parseNum(headerMatch[1]);
-  var changeSign = (headerMatch[2] == '>') ? 1 : -1;
-  var changeMag = exports.parseNum(headerMatch[3]);
-  var newLen = oldLen + changeSign * changeMag;
-  var opsStart = headerMatch[0].length;
-  var opsEnd = cs.indexOf("$");
-  if (opsEnd < 0) opsEnd = cs.length;
-  return {
-    oldLen: oldLen,
-    newLen: newLen,
-    ops: cs.substring(opsStart, opsEnd),
-    charBank: cs.substring(opsEnd + 1)
-  };
-};
+// exports.unpack = function (cs) {
+//   var headerRegex = /Z:([0-9a-z]+)([><])([0-9a-z]+)|/;
+//   var headerMatch = headerRegex.exec(cs);
+//   if ((!headerMatch) || (!headerMatch[0])) {
+//     exports.error("Not a exports: " + cs);
+//   }
+//   var oldLen = exports.parseNum(headerMatch[1]);
+//   var changeSign = (headerMatch[2] == '>') ? 1 : -1;
+//   var changeMag = exports.parseNum(headerMatch[3]);
+//   var newLen = oldLen + changeSign * changeMag;
+//   var opsStart = headerMatch[0].length;
+//   var opsEnd = cs.indexOf("$");
+//   if (opsEnd < 0) opsEnd = cs.length;
+//   return {
+//     oldLen: oldLen,
+//     newLen: newLen,
+//     ops: cs.substring(opsStart, opsEnd),
+//     charBank: cs.substring(opsEnd + 1)
+//   };
+// };
 
 /**
  * Packs Changeset object into a string 
@@ -896,13 +896,13 @@ exports.unpack = function (cs) {
  * @params bank {string} Charbank of the Changeset
  * @returns {Changeset} a Changeset class
  */
-exports.pack = function (oldLen, newLen, opsStr, bank) {
-  var lenDiff = newLen - oldLen;
-  var lenDiffStr = (lenDiff >= 0 ? '>' + exports.numToString(lenDiff) : '<' + exports.numToString(-lenDiff));
-  var a = [];
-  a.push('Z:', exports.numToString(oldLen), lenDiffStr, opsStr, '$', bank);
-  return a.join('');
-};
+// exports.pack = function (oldLen, newLen, opsStr, bank) {
+//   var lenDiff = newLen - oldLen;
+//   var lenDiffStr = (lenDiff >= 0 ? '>' + exports.numToString(lenDiff) : '<' + exports.numToString(-lenDiff));
+//   var a = [];
+//   a.push('Z:', exports.numToString(oldLen), lenDiffStr, opsStr, '$', bank);
+//   return a.join('');
+// };
 
 /**
  * Applies a Changeset to a string
