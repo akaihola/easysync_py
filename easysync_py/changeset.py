@@ -96,7 +96,7 @@ class OpIterator:
         result = self.regex.search(self.opsStr, pos=regex_lastIndex)
         self.curIndex = result.end()
         if result.group(0) == '?':
-            changeset.error("Hit error opcode in op stream")
+            error('Hit error opcode in op stream')
         return result
 
     def next(self, optObj: Optional['Op'] = None) -> 'Op':
@@ -260,7 +260,7 @@ def unpack(cs: str) -> Dict[str, Union[int, str]]:
     headerRegex = re.compile(r'Z:([0-9a-z]+)([><])([0-9a-z]+)|')
     headerMatch = headerRegex.search(cs)
     if not headerMatch or not headerMatch.group(0):
-        changeset.error(f'Not a changeset: {cs}')
+        error(f'Not a changeset: {cs}')
     oldLen = parseNum(headerMatch.group(1))
     changeSign = 1 if headerMatch.group(2) == '>' else -1
     changeMag = parseNum(headerMatch.group(3))
