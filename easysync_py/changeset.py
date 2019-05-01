@@ -297,7 +297,56 @@ def pack(oldLen: int, newLen: int, opsStr: str, bank: str) -> str:
 changeset.pack = HJs(pack)
 
 
-# changeset.applyToText = HJs(applyToText)
+def applyToText(cs: str, text: str) -> str:
+    """Applies a Changeset to a string
+
+    :param cs: String encoded Changeset
+    :param text: String to which a Changeset should be applied
+
+    """
+    unpacked = unpack(cs)
+    assert_(len(text) == unpacked['oldLen'],
+            'mismatched apply: ', len(text), ' / ', unpacked['oldLen'])
+    csIter = OpIterator(unpacked['ops'])
+    bankIter = StringIterator(unpacked['charBank'])
+    strIter = StringIterator(text)
+    assem = StringAssembler()
+    while csIter.hasNext():
+        op = csIter.next()
+        if op.opcode == '+':
+            # op is + and op.lines 0:
+            # -> no newlines must be in op.chars
+            # op is + and op.lines >0:
+            # -> op.chars must include op.lines newlines
+            if op.lines != len(bankIter.peek(op.chars).split('\n')) - 1:
+                raise Exception(f'newline count is wrong in op +; '
+                                f'cs:{cs} and text:{text}')
+            assem.append(bankIter.take(op.chars))
+        elif op.opcode == '-':
+            # op is - and op.lines 0:
+            # -> no newlines must be in the deleted string
+            # op is - and op.lines >0:
+            # -> op.lines newlines must be in the deleted string
+            if op.lines != len(strIter.peek(op.chars).split('\n')) - 1:
+                raise Exception(f'newline count is wrong in op -; '
+                                f'cs:{cs} and text:{text}')
+            strIter.skip(op.chars)
+        elif op.opcode == '=':
+            # op is = and op.lines 0:
+            # -> no newlines must be in the copied string
+            # op is = and op.lines >0:
+            # -> op.lines newlines must be in the copied string
+            if op.lines != len(strIter.peek(op.chars).split('\n')) - 1:
+                raise Exception('newline count is wrong in op =; '
+                                'cs:{cs} and text:{str}')
+            assem.append(strIter.take(op.chars))
+    assem.append(strIter.take(strIter.remaining()))
+    return assem.toString()
+
+
+changeset.applyToText = HJs(applyToText)
+
+
 # changeset.mutateTextLines = HJs(mutateTextLines)
 # changeset.composeAttributes = HJs(composeAttributes)
 # changeset._slicerZipperFunc = HJs(_slicerZipperFunc)
