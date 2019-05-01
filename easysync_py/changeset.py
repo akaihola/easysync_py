@@ -319,8 +319,8 @@ def applyToText(cs: str, text: str) -> str:
             # op is + and op.lines >0:
             # -> op.chars must include op.lines newlines
             if op.lines != len(bankIter.peek(op.chars).split('\n')) - 1:
-                raise Exception(f'newline count is wrong in op +; '
-                                f'cs:{cs} and text:{text}')
+                raise EasySyncError(f'newline count is wrong in op +; '
+                                    f'cs:{cs} and text:{text}')
             assem.append(bankIter.take(op.chars))
         elif op.opcode == '-':
             # op is - and op.lines 0:
@@ -328,8 +328,8 @@ def applyToText(cs: str, text: str) -> str:
             # op is - and op.lines >0:
             # -> op.lines newlines must be in the deleted string
             if op.lines != len(strIter.peek(op.chars).split('\n')) - 1:
-                raise Exception(f'newline count is wrong in op -; '
-                                f'cs:{cs} and text:{text}')
+                raise EasySyncError(f'newline count is wrong in op -; '
+                                    f'cs:{cs} and text:{text}')
             strIter.skip(op.chars)
         elif op.opcode == '=':
             # op is = and op.lines 0:
@@ -337,8 +337,8 @@ def applyToText(cs: str, text: str) -> str:
             # op is = and op.lines >0:
             # -> op.lines newlines must be in the copied string
             if op.lines != len(strIter.peek(op.chars).split('\n')) - 1:
-                raise Exception('newline count is wrong in op =; '
-                                'cs:{cs} and text:{str}')
+                raise EasySyncError('newline count is wrong in op =; '
+                                    'cs:{cs} and text:{str}')
             assem.append(strIter.take(op.chars))
     assem.append(strIter.take(strIter.remaining()))
     return assem.toString()
