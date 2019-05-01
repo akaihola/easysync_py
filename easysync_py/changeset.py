@@ -231,7 +231,21 @@ class StringIterator:
 changeset.stringIterator = HJs(StringIterator)
 
 
-# changeset.stringAssembler = HJs(stringAssembler)
+class StringAssembler:
+    """A custom made StringBuffer"""
+    def __init__(self):
+        self.pieces = []
+
+    def append(self, x):
+        self.pieces.append(str(x))
+
+    def toString(self):
+        return ''.join(self.pieces)
+
+
+changeset.stringAssembler = HJs(StringAssembler)
+
+
 # changeset.textLinesMutator = HJs(textLinesMutator)
 # changeset.applyZip = HJs(applyZip)
 
