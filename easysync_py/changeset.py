@@ -259,6 +259,9 @@ changeset.stringAssembler = HJs(StringAssembler)
 # changeset.applyZip = HJs(applyZip)
 
 
+HEADER_RE = re.compile(r'Z:([0-9a-z]+)([><])([0-9a-z]+)')
+
+
 def unpack(cs: str) -> Dict[str, Union[int, str]]:
     """Unpack a string encoded Changeset into a proper Changeset object
 
@@ -266,22 +269,21 @@ def unpack(cs: str) -> Dict[str, Union[int, str]]:
     :return: a Changeset data structure
 
     """
-    headerRegex = re.compile(r'Z:([0-9a-z]+)([><])([0-9a-z]+)|')
-    headerMatch = headerRegex.search(cs)
-    if not headerMatch or not headerMatch.group(0):
+    match = HEADER_RE.search(cs)
+    if not match:
         error(f'Not a changeset: {cs}')
-    oldLen = parseNum(headerMatch.group(1))
-    changeSign = 1 if headerMatch.group(2) == '>' else -1
-    changeMag = parseNum(headerMatch.group(3))
-    newLen = oldLen + changeSign * changeMag
-    opsStart = len(headerMatch.group(0))
-    opsEnd = cs.find("$")
-    if opsEnd < 0:
-        opsEnd = len(cs)
-    return {'oldLen': oldLen,
+    old_length = parseNum(match.group(1))
+    change_sign = 1 if match.group(2) == '>' else -1
+    change_mag = parseNum(match.group(3))
+    newLen = old_length + change_sign * change_mag
+    ops_start = len(match.group(0))
+    ops_end = cs.find("$")
+    if ops_end < 0:
+        ops_end = len(cs)
+    return {'oldLen': old_length,
             'newLen': newLen,
-            'ops': cs[opsStart:opsEnd],
-            'charBank': cs[opsEnd + 1:]}
+            'ops': cs[ops_start:ops_end],
+            'charBank': cs[ops_end + 1:]}
 
 
 changeset.unpack = HJs(unpack)
