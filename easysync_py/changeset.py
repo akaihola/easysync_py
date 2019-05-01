@@ -186,7 +186,51 @@ changeset.copyOp = HJs(Op.copy_op)
 # changeset.smartOpAssembler = HJs(smartOpAssembler)
 # changeset.mergingOpAssembler = HJs(mergingOpAssembler)
 # changeset.opAssembler = HJs(opAssembler)
-# changeset.stringIterator = HJs(stringIterator)
+
+
+class StringIterator:
+    """A custom made String Iterator"""
+
+    def __init__(self, text: str):
+        """Create the string iterator
+
+        :param text: String to be iterated over
+
+        """
+        self.text = text
+        self.curIndex = 0
+        # newLines is the number of `\n` between curIndex and len(str)
+        self.newLines = len(str.split('\n')) - 1
+
+    def newlines(self):
+        return self.newLines
+
+    def assertRemaining(self, n):
+        assert_(n <= self.remaining(), "!(", n, " <= ", self.remaining(), ")")
+
+    def take(self, n):
+        self.assertRemaining(n)
+        s = self.text[self.curIndex:self.curIndex + n]
+        self.newLines -= len(s.split('\n')) - 1
+        self.curIndex += n
+        return s
+
+    def peek(self, n):
+        self.assertRemaining(n)
+        s = self.text[self.curIndex:self.curIndex + n]
+        return s
+
+    def skip(self, n):
+        self.assertRemaining(n)
+        self.curIndex += n
+
+    def remaining(self):
+        return len(self.text) - self.curIndex
+
+
+changeset.stringIterator = HJs(StringIterator)
+
+
 # changeset.stringAssembler = HJs(stringAssembler)
 # changeset.textLinesMutator = HJs(textLinesMutator)
 # changeset.applyZip = HJs(applyZip)
