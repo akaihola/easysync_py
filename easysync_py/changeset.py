@@ -220,6 +220,16 @@ class StringIterator:
         s = self.text[self.curIndex:self.curIndex + n]
         return s
 
+    def peek_newline_count(self, n):
+        """Count the number of newlines in the next ``n`` characters
+
+        :param n: The number of characters to peek ahead
+        :return: The number of newlines in the next ``n`` characters
+
+        """
+        s = self.peek(n)
+        return len(s.split('\n')) - 1
+
     def skip(self, n):
         self.assertRemaining(n)
         self.curIndex += n
@@ -318,7 +328,7 @@ def applyToText(cs: str, text: str) -> str:
             # -> no newlines must be in op.chars
             # op is + and op.lines >0:
             # -> op.chars must include op.lines newlines
-            if op.lines != len(bankIter.peek(op.chars).split('\n')) - 1:
+            if op.lines != bankIter.peek_newline_count(op.chars):
                 raise EasySyncError(f'newline count is wrong in op +; '
                                     f'cs:{cs} and text:{text}')
             assem.append(bankIter.take(op.chars))
@@ -327,7 +337,7 @@ def applyToText(cs: str, text: str) -> str:
             # -> no newlines must be in the deleted string
             # op is - and op.lines >0:
             # -> op.lines newlines must be in the deleted string
-            if op.lines != len(strIter.peek(op.chars).split('\n')) - 1:
+            if op.lines != strIter.peek_newline_count(op.chars):
                 raise EasySyncError(f'newline count is wrong in op -; '
                                     f'cs:{cs} and text:{text}')
             strIter.skip(op.chars)
@@ -336,7 +346,7 @@ def applyToText(cs: str, text: str) -> str:
             # -> no newlines must be in the copied string
             # op is = and op.lines >0:
             # -> op.lines newlines must be in the copied string
-            if op.lines != len(strIter.peek(op.chars).split('\n')) - 1:
+            if op.lines != strIter.peek_newline_count(op.chars):
                 raise EasySyncError('newline count is wrong in op =; '
                                     'cs:{cs} and text:{str}')
             assem.append(strIter.take(op.chars))
