@@ -111,6 +111,16 @@ class OpIterator:
             op.clear()
         return op
 
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        op = Op()
+        self.next(op)
+        if not op.opcode:
+            raise StopIteration()
+        return op
+
     def hasNext(self):
         return bool(self.regexResult.group(0))
 
