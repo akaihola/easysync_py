@@ -198,9 +198,10 @@ class StringIterator:
 
         """
         self.text = text
+        self.length = len(text)
         self.curIndex = 0
         # newLines is the number of `\n` between curIndex and len(str)
-        self.newLines = len(str.split('\n')) - 1
+        self.newLines = text.count('\n')
 
     def newlines(self):
         return self.newLines
@@ -211,14 +212,13 @@ class StringIterator:
     def take(self, n):
         self.assertRemaining(n)
         s = self.text[self.curIndex:self.curIndex + n]
-        self.newLines -= len(s.split('\n')) - 1
+        self.newLines -= s.count('\n')
         self.curIndex += n
         return s
 
     def peek(self, n):
         self.assertRemaining(n)
-        s = self.text[self.curIndex:self.curIndex + n]
-        return s
+        return self.text[self.curIndex:self.curIndex + n]
 
     def peek_newline_count(self, n):
         """Count the number of newlines in the next ``n`` characters
@@ -227,15 +227,14 @@ class StringIterator:
         :return: The number of newlines in the next ``n`` characters
 
         """
-        s = self.peek(n)
-        return len(s.split('\n')) - 1
+        return self.peek(n).count('\n')
 
     def skip(self, n):
         self.assertRemaining(n)
         self.curIndex += n
 
     def remaining(self):
-        return len(self.text) - self.curIndex
+        return self.length - self.curIndex
 
 
 changeset.stringIterator = HJs(StringIterator)
