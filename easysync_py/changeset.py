@@ -1,5 +1,6 @@
 import re
 import string
+from dataclasses import dataclass
 from typing import Dict, Optional, Union
 
 from js2py.base import HJs
@@ -120,21 +121,17 @@ class OpIterator:
 changeset.opIterator = HJs(OpIterator)
 
 
+@dataclass
 class Op:
-    def __init__(self,
-                 opcode: Optional[str] = None,
-                 chars: int = 0,
-                 lines: int = 0,
-                 attribs: str = ''):
-        """Create a new Op object
+    """Create a new Op object
 
-        :param opcode: the type operation of the Op object
+    :param opcode: the type operation of the Op object
 
-        """
-        self.opcode = opcode or ''
-        self.chars = chars
-        self.lines = lines
-        self.attribs = attribs
+    """
+    opcode: Optional[str] = None
+    chars: int = 0
+    lines: int = 0
+    attribs: str = ''
 
     def clear(self):
         """Clean an Op object"""
