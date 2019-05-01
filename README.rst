@@ -28,3 +28,6 @@ Run::
 
     pip install Js2Py
     python easysync_tests.py
+
+
+.. _Js2Py: https://github.com/PiotrDabkowski/Js2Py
