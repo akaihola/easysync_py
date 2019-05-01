@@ -320,9 +320,8 @@ def applyToText(cs: str, text: str) -> str:
     csIter = OpIterator(unpacked['ops'])
     bankIter = StringIterator(unpacked['charBank'])
     strIter = StringIterator(text)
-    assem = StringAssembler()
-    while csIter.hasNext():
-        op = csIter.next()
+    assem = []
+    for op in csIter:
         if op.opcode == '+':
             # op is + and op.lines 0:
             # -> no newlines must be in op.chars
@@ -351,7 +350,7 @@ def applyToText(cs: str, text: str) -> str:
                                     'cs:{cs} and text:{str}')
             assem.append(strIter.take(op.chars))
     assem.append(strIter.take(strIter.remaining()))
-    return assem.toString()
+    return ''.join(assem)
 
 
 changeset.applyToText = HJs(applyToText)
