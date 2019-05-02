@@ -364,7 +364,19 @@ changeset.applyToText = HJs(applyToText)
 # changeset.mutateAttributionLines = HJs(mutateAttributionLines)
 # changeset.joinAttributionLines = HJs(joinAttributionLines)
 # changeset.splitAttributionLines = HJs(splitAttributionLines)
-# changeset.splitTextLines = HJs(splitTextLines)
+
+
+SPLIT_TEXT_LINES_RE = re.compile(r'[^\n]*(?:\n|[^\n]$)')
+
+
+def splitTextLines(text):
+    lines = SPLIT_TEXT_LINES_RE.findall(text)
+    return lines
+
+
+changeset.splitTextLines = HJs(splitTextLines)
+
+
 # changeset.compose = HJs(compose)
 # changeset.attributeTester = HJs(attributeTester)
 # changeset.identity = HJs(identity)
