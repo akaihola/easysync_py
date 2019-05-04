@@ -1,9 +1,9 @@
 import re
 import string
 from dataclasses import dataclass
-from typing import Dict, Optional, Union
+from typing import Dict, List, Optional, Union
 
-from js2py.base import HJs
+from js2py.base import HJs, JsObjectWrapper
 from pkg_resources import resource_filename
 
 from easysync_py.js_module import eval_js_module
@@ -255,7 +255,248 @@ class StringAssembler:
 changeset.stringAssembler = HJs(StringAssembler)
 
 
-# changeset.textLinesMutator = HJs(textLinesMutator)
+class TextLinesMutator:
+    def __init__(self, lines):
+        """This class allows to iterate and modify texts which have several lines
+
+        It is used for applying Changesets on arrays of lines
+        Note from prev docs: "lines" need not be an array as long as it
+        supports certain calls (lines_foo inside).
+
+        Mutates lines, an array of strings, in place.
+        Mutation operations have the same constraints as exports operations
+        with respect to newlines, but not the other additional constraints
+        (i.e. ins/del ordering, forbidden no-ops, non-mergeability, final
+        newline). Can be used to mutate lists of strings where the last char
+        of each string is not actually a newline, but for the purposes of ``N``
+        and ``L`` values, the caller should pretend it is, and for things to
+        work right in that case, the input to ``insert()`` should be a single
+        line with no newlines.
+
+        :param lines: The lines to mutate
+
+        """
+        if isinstance(lines, JsObjectWrapper):
+            # Compatibility code for usage from JavaScript
+            self._original = lines
+            self.lines = list(lines)
+        else:
+            self._original = None
+            self.lines = lines
+        self.curSplice = [0, 0]
+        self.inSplice = False
+        # position in document after curSplice is applied:
+        self.curLine = 0
+        self.curCol = 0
+        # invariant:
+        #   if inSplice
+        #   then curLine is in curSplice[0] + len(curSplice) - {2,3}
+        #   and curLine >= curSplice[0]
+        # invariant:
+        #   if inSplice and (curLine >= curSplice[0] + len(curSplice) - 2))
+        #   then curCol == 0
+
+    def lines_applySplice(self, s):
+        try:
+            start, length, *insert = s
+        except ValueError:
+            breakpoint()
+        self.lines[start:start + length] = insert
+        if self._original is not None:
+            # Compatibility code for usage from JavaScript
+            self._original.splice(*s)
+
+    def lines_toSource(self):
+        return repr(self.lines)
+
+    def lines_get(self, idx):
+        return self.lines[idx]
+        # can be unimplemented if removeLines's return value not needed
+
+    def lines_slice(self, start, end):
+        return self.lines[start:end]
+
+    def lines_length(self):
+        return len(self.lines)
+
+    def enterSplice(self):
+        self.curSplice[0] = self.curLine
+        self.curSplice[1] = 0
+        if self.curCol > 0:
+            self.putCurLineInSplice()
+        self.inSplice = True
+
+    def leaveSplice(self):
+        self.lines_applySplice(self.curSplice)
+        self.curSplice[:] = [0, 0]
+        self.inSplice = False
+
+    def isCurLineInSplice(self):
+        return self.curLine - self.curSplice[0] < len(self.curSplice) - 2
+
+    def debugPrint(self, typ):
+        print(f'{typ}: {self.curSplice!r} / '
+              f'{self.curLine},{self.curCol} / '
+              f'{self.lines!r}')
+
+    def putCurLineInSplice(self):
+        if not self.isCurLineInSplice():
+            self.curSplice.append(self.lines[self.curSplice[0] +
+                                             self.curSplice[1]])
+            self.curSplice[1] += 1
+        return 2 + self.curLine - self.curSplice[0]
+
+    def skipLines(self, L, includeInSplice=False):
+        if L:
+            if includeInSplice:
+                if not self.inSplice:
+                    self.enterSplice()
+                for i in range(L):
+                    self.curCol = 0
+                    self.putCurLineInSplice()
+                    self.curLine += 1
+            else:
+                if self.inSplice:
+                    if L > 1:
+                        self.leaveSplice()
+                    else:
+                        self.putCurLineInSplice()
+                self.curLine += L
+                self.curCol = 0
+            # print(f'{self.inSplice} / '
+            #       f'{self.isCurLineInSplice()} / '
+            #       f'{self.curSplice[0]} / '
+            #       f'{self.curSplice[1]} / '
+            #       f'{len(self.lines)}')
+            # if (self.inSplice
+            #         and not self.isCurLineInSplice()
+            #         and self.curSplice[0] + self.curSplice[1] < len(self.lines):
+            #     print("BLAH")
+            #     self.putCurLineInSplice()
+            # tests case foo in remove(), which isn't otherwise covered in
+            # current impl
+        # debugPrint('skip')
+
+    def skip(self, N, L=None, includeInSplice=False):
+        if N:
+            if L:
+                self.skipLines(L, includeInSplice)
+            else:
+                if includeInSplice and not self.inSplice:
+                    self.enterSplice()
+                if self.inSplice:
+                    self.putCurLineInSplice()
+                self.curCol += N
+                # debugPrint("skip")
+
+    def removeLines(self, L):
+        removed = ''
+        if L:
+            if not self.inSplice:
+                self.enterSplice()
+
+            def nextKLinesText(k):
+                m = self.curSplice[0] + self.curSplice[1]
+                try:
+                    return ''.join(self.lines[m:m + k])
+                except TypeError:
+                    breakpoint()
+
+            if self.isCurLineInSplice():
+                # print(self.curCol)
+                if self.curCol == 0:
+                    removed = self.curSplice[-1]
+                    # print('FOO'); # case foo
+                    self.curSplice.pop()
+                    removed += nextKLinesText(L - 1)
+                    self.curSplice[1] += L - 1
+                else:
+                    removed = nextKLinesText(L - 1)
+                    self.curSplice[1] += L - 1
+                    sline = len(self.curSplice) - 1
+                    removed = self.curSplice[sline][self.curCol:] + removed
+                    self.curSplice[sline] = (
+                            self.curSplice[sline][:self.curCol] +
+                            self.lines[self.curSplice[0] + self.curSplice[1]])
+                    self.curSplice[1] += 1
+            else:
+                removed = nextKLinesText(L)
+                self.curSplice[1] += L
+            # debugPrint("remove")
+        return removed
+
+    def remove(self, N, L, verify=None):
+        removed = ''
+        if N:
+            if L:
+                return self.removeLines(L)
+            else:
+                if not self.inSplice:
+                    self.enterSplice()
+                sline = self.putCurLineInSplice()
+                removed = self.curSplice[sline][self.curCol:self.curCol + N]
+                self.curSplice[sline] = (
+                        self.curSplice[sline][:self.curCol] +
+                        self.curSplice[sline][self.curCol + N:])
+                # debugPrint("remove")
+        if verify is not None and removed != verify:
+            raise EasySyncError('Expected to remove {!r}, but removed {!r} '
+                                'instead'.format(verify, removed))
+        return removed
+
+    def insert(self, text, L=None):
+        if text:
+            if not self.inSplice:
+                self.enterSplice()
+            if L:
+                newLines = splitTextLines(text)
+                if self.isCurLineInSplice():
+                    # if self.curCol == 0:
+                    #     self.curSplice.pop()
+                    #     self.curSplice[1] -= 1
+                    #     self.curSplice.extend(newLines)
+                    #     self.curLine += len(newLines)
+                    # else:
+                    sline = len(self.curSplice) - 1
+                    theLine = self.curSplice[sline]
+                    lineCol = self.curCol
+                    self.curSplice[sline] = theLine[:lineCol] + newLines[0]
+                    self.curLine += 1
+                    newLines.pop(0)
+                    self.curSplice.extend(newLines)
+                    self.curLine += len(newLines)
+                    self.curSplice.append(theLine[lineCol:])
+                    self.curCol = 0
+                else:
+                    self.curSplice.extend(newLines)
+                    self.curLine += len(newLines)
+            else:
+                sline = self.putCurLineInSplice()
+                self.curSplice[sline] = (self.curSplice[sline][:self.curCol] +
+                                         text +
+                                         self.curSplice[sline][self.curCol:])
+                self.curCol += len(text)
+            # debugPrint('insert')
+
+    def hasMore(self):
+        # print(f'{len(self.lines)} / '
+        #       f'{self.inSplice} / '
+        #       f'{len(self.curSplice) - 2} / '
+        #       f'{self.curSplice[1])}')
+        docLines = len(self.lines)
+        if self.inSplice:
+            docLines += len(self.curSplice) - 2 - self.curSplice[1]
+        return self.curLine < docLines
+
+    def close(self):
+        if self.inSplice:
+            self.leaveSplice()
+        # debugPrint("close")
+
+
+changeset.textLinesMutator = HJs(TextLinesMutator)
+
+
 # changeset.applyZip = HJs(applyZip)
 
 
@@ -313,6 +554,7 @@ def applyToText(cs: str, text: str) -> str:
 
     :param cs: String encoded Changeset
     :param text: String to which a Changeset should be applied
+    :return: The resulting text after applying the Changeset
 
     """
     unpacked = unpack(cs)
@@ -357,7 +599,30 @@ def applyToText(cs: str, text: str) -> str:
 changeset.applyToText = HJs(applyToText)
 
 
-# changeset.mutateTextLines = HJs(mutateTextLines)
+def mutateTextLines(cs: str, lines: List[str]) -> None:
+    """Apply a changeset on an array of lines
+
+    :param cs: the changeset to be applied
+    :param lines: The lines to which the changeset needs to be applied
+
+    """
+    unpacked = unpack(cs)
+    csIter = OpIterator(unpacked['ops'])
+    bankIter = StringIterator(unpacked['charBank'])
+    mut = TextLinesMutator(lines)
+    for op in csIter:
+        if op.opcode == '+':
+            mut.insert(bankIter.take(op.chars), op.lines)
+        elif op.opcode == '-':
+            mut.remove(op.chars, op.lines)
+        elif op.opcode == '=':
+            mut.skip(op.chars, op.lines, bool(op.attribs))
+    mut.close()
+
+
+changeset.mutateTextLines = HJs(mutateTextLines)
+
+
 # changeset.composeAttributes = HJs(composeAttributes)
 # changeset._slicerZipperFunc = HJs(_slicerZipperFunc)
 # changeset.applyToAttribution = HJs(applyToAttribution)
