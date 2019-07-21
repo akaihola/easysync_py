@@ -1,7 +1,7 @@
 import re
 import string
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from js2py.base import HJs, JsObjectWrapper
 from pkg_resources import resource_filename
@@ -669,3 +669,114 @@ changeset.splitTextLines = HJs(splitTextLines)
 # changeset.followAttributes = HJs(followAttributes)
 # changeset.composeWithDeletions = HJs(composeWithDeletions)
 # changeset._slicerZipperFuncWithDeletions = HJs(_slicerZipperFuncWithDeletions)
+
+
+def parse_insert_args(insert_chars, insert_num_lines=None):
+    return insert_chars, insert_num_lines
+
+
+def parse_skip_args(include_in_splice=False, check=None):
+    return check
+
+
+def parse_remove_args(check=None):
+    return check
+
+
+def parse_remove_skip_args(opcode, num_chars, num_lines=0, *args):
+    if opcode == 'remove':
+        return num_chars, num_lines, parse_remove_args(*args)
+    else:
+        return num_chars, num_lines, parse_skip_args(*args)
+
+
+def mutate(original: List[str],
+           ops: List[Tuple[Union[str, int]]]) -> Tuple[List[str],
+                                                       List]:
+    mutated = []
+    changes = []
+    orig_linenum = 0
+    orig_column = 0
+
+    def copy(chars_to_copy: str):
+        if not mutated or mutated[-1].endswith('\n'):
+            mutated.append(chars_to_copy)
+        else:
+            mutated[-1] += chars_to_copy
+
+    while ops:
+        opcode, *args = ops.pop(0)
+        prev_orig_linenum = orig_linenum
+        prev_len_mutated = len(mutated)
+        was_inside_line = (prev_len_mutated
+                           and not mutated[-1].endswith('\n'))
+        if opcode == 'insert':
+            chars_to_insert, num_lines_to_insert = parse_insert_args(*args)
+            num_lines_inserted = chars_to_insert.count('\n')
+            if num_lines_to_insert is not None:
+                assert num_lines_inserted == num_lines_to_insert
+            for line in splitTextLines(chars_to_insert):
+                copy(line)
+            if chars_to_insert.endswith('\n') and not was_inside_line:
+                end_affected_original_linenum = orig_linenum
+            else:
+                end_affected_original_linenum = orig_linenum + 1
+            if was_inside_line:
+                begin_affected_new_linenum = prev_len_mutated - 1
+            else:
+                begin_affected_new_linenum = prev_len_mutated
+            affected_new_line_range = begin_affected_new_linenum, len(mutated)
+            print(f'insert {chars_to_insert!r}, '
+                  f'num_lines={num_lines_inserted}')
+        elif opcode in ['skip', 'remove']:
+            (chars_left_to_process,
+             lines_left_to_process,
+             check) = parse_remove_skip_args(opcode, *args)
+            skipped_or_removed = []
+            prev_orig_column = orig_column
+            while chars_left_to_process:
+                orig_line = original[orig_linenum]
+                num_chars_on_line = min(len(orig_line) - orig_column,
+                                        chars_left_to_process)
+                prev_orig_column = orig_column
+                orig_column += num_chars_on_line
+                chars_to_process = orig_line[prev_orig_column:orig_column]
+                skipped_or_removed.append(chars_to_process)
+                lines_left_to_process -= chars_to_process.count('\n')
+                print(f'{opcode} {chars_to_process!r}, '
+                      f'num_lines == {lines_left_to_process}')
+                assert lines_left_to_process >= 0
+                if opcode == 'skip':
+                    copy(chars_to_process)
+                chars_left_to_process -= num_chars_on_line
+                if orig_column == len(orig_line):
+                    orig_column = 0
+                    orig_linenum += 1
+            assert lines_left_to_process == 0
+            end_affected_original_linenum = orig_linenum + 1
+            if opcode == 'skip':
+                affected_new_line_range = None
+            else:
+                affected_new_line_range = (
+                    prev_len_mutated - (1 if was_inside_line else 0),
+                    prev_len_mutated + (0 if was_inside_line else 1))
+            if check is not None:
+                if ''.join(skipped_or_removed) != check:
+                    raise EasySyncError(f'Expected to {opcode} {check!r}, but '
+                                        f'processed {skipped_or_removed!r}')
+        else:
+            raise EasySyncError(f'Invalid opcode "{opcode}"')
+        affected_original_line_range = (prev_orig_linenum,
+                                        end_affected_original_linenum)
+        if affected_new_line_range:
+            changes.append((affected_original_line_range,
+                            affected_new_line_range,
+                            opcode, args))
+    while orig_linenum < len(original):
+        orig_line = original[orig_linenum]
+        if orig_column < len(orig_line):
+            copy(orig_line[orig_column:])
+        orig_column = 0
+        orig_linenum += 1
+
+    return mutated, changes
