@@ -457,10 +457,9 @@ class TextLinesMutator:
                     #     self.curSplice.extend(newLines)
                     #     self.curLine += len(newLines)
                     # else:
-                    sline = len(self.curSplice) - 1
-                    theLine = self.curSplice[sline]
+                    theLine = self.curSplice[-1]
                     lineCol = self.curCol
-                    self.curSplice[sline] = theLine[:lineCol] + newLines[0]
+                    self.curSplice[-1] = theLine[:lineCol] + newLines[0]
                     self.curLine += 1
                     newLines.pop(0)
                     self.curSplice.extend(newLines)
