@@ -505,48 +505,48 @@ exports.opAssembler = function () {
  * A custom made String Iterator
  * @param str {string} String to be iterated over
  */ 
-exports.stringIterator = function (str) {
-  var curIndex = 0;
-  // newLines is the number of \n between curIndex and str.length
-  var newLines = str.split("\n").length - 1
-  function getnewLines(){
-    return newLines
-  }
-
-  function assertRemaining(n) {
-    exports.assert(n <= remaining(), "!(", n, " <= ", remaining(), ")");
-  }
-
-  function take(n) {
-    assertRemaining(n);
-    var s = str.substr(curIndex, n);
-    newLines -= s.split("\n").length - 1
-    curIndex += n;
-    return s;
-  }
-
-  function peek(n) {
-    assertRemaining(n);
-    var s = str.substr(curIndex, n);
-    return s;
-  }
-
-  function skip(n) {
-    assertRemaining(n);
-    curIndex += n;
-  }
-
-  function remaining() {
-    return str.length - curIndex;
-  }
-  return {
-    take: take,
-    skip: skip,
-    remaining: remaining,
-    peek: peek,
-    newlines: getnewLines
-  };
-};
+// exports.stringIterator = function (str) {
+//   var curIndex = 0;
+//   // newLines is the number of \n between curIndex and str.length
+//   var newLines = str.split("\n").length - 1
+//   function getnewLines(){
+//     return newLines
+//   }
+//
+//   function assertRemaining(n) {
+//     exports.assert(n <= remaining(), "!(", n, " <= ", remaining(), ")");
+//   }
+//
+//   function take(n) {
+//     assertRemaining(n);
+//     var s = str.substr(curIndex, n);
+//     newLines -= s.split("\n").length - 1
+//     curIndex += n;
+//     return s;
+//   }
+//
+//   function peek(n) {
+//     assertRemaining(n);
+//     var s = str.substr(curIndex, n);
+//     return s;
+//   }
+//
+//   function skip(n) {
+//     assertRemaining(n);
+//     curIndex += n;
+//   }
+//
+//   function remaining() {
+//     return str.length - curIndex;
+//   }
+//   return {
+//     take: take,
+//     skip: skip,
+//     remaining: remaining,
+//     peek: peek,
+//     newlines: getnewLines
+//   };
+// };
 
 /**
  * A custom made StringBuffer 
