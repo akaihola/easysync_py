@@ -909,45 +909,45 @@ exports.applyZip = function (in1, idx1, in2, idx2, func) {
  * @params cs {string} String encoded Changeset
  * @params str {string} String to which a Changeset should be applied
  */
-exports.applyToText = function (cs, str) {
-  var unpacked = exports.unpack(cs);
-  exports.assert(str.length == unpacked.oldLen, "mismatched apply: ", str.length, " / ", unpacked.oldLen);
-  var csIter = exports.opIterator(unpacked.ops);
-  var bankIter = exports.stringIterator(unpacked.charBank);
-  var strIter = exports.stringIterator(str);
-  var assem = exports.stringAssembler();
-  while (csIter.hasNext()) {
-    var op = csIter.next();
-    switch (op.opcode) {
-    case '+':
-      //op is + and op.lines 0: no newlines must be in op.chars
-      //op is + and op.lines >0: op.chars must include op.lines newlines
-      if(op.lines != bankIter.peek(op.chars).split("\n").length - 1){
-        throw new Error("newline count is wrong in op +; cs:"+cs+" and text:"+str);
-      }
-      assem.append(bankIter.take(op.chars));
-      break;
-    case '-':
-      //op is - and op.lines 0: no newlines must be in the deleted string
-      //op is - and op.lines >0: op.lines newlines must be in the deleted string
-      if(op.lines != strIter.peek(op.chars).split("\n").length - 1){
-        throw new Error("newline count is wrong in op -; cs:"+cs+" and text:"+str);
-      }
-      strIter.skip(op.chars);
-      break;
-    case '=':
-      //op is = and op.lines 0: no newlines must be in the copied string
-      //op is = and op.lines >0: op.lines newlines must be in the copied string
-      if(op.lines != strIter.peek(op.chars).split("\n").length - 1){
-        throw new Error("newline count is wrong in op =; cs:"+cs+" and text:"+str);
-      }
-      assem.append(strIter.take(op.chars));
-      break;
-    }
-  }
-  assem.append(strIter.take(strIter.remaining()));
-  return assem.toString();
-};
+// exports.applyToText = function (cs, str) {
+//   var unpacked = exports.unpack(cs);
+//   exports.assert(str.length == unpacked.oldLen, "mismatched apply: ", str.length, " / ", unpacked.oldLen);
+//   var csIter = exports.opIterator(unpacked.ops);
+//   var bankIter = exports.stringIterator(unpacked.charBank);
+//   var strIter = exports.stringIterator(str);
+//   var assem = exports.stringAssembler();
+//   while (csIter.hasNext()) {
+//     var op = csIter.next();
+//     switch (op.opcode) {
+//     case '+':
+//       //op is + and op.lines 0: no newlines must be in op.chars
+//       //op is + and op.lines >0: op.chars must include op.lines newlines
+//       if(op.lines != bankIter.peek(op.chars).split("\n").length - 1){
+//         throw new Error("newline count is wrong in op +; cs:"+cs+" and text:"+str);
+//       }
+//       assem.append(bankIter.take(op.chars));
+//       break;
+//     case '-':
+//       //op is - and op.lines 0: no newlines must be in the deleted string
+//       //op is - and op.lines >0: op.lines newlines must be in the deleted string
+//       if(op.lines != strIter.peek(op.chars).split("\n").length - 1){
+//         throw new Error("newline count is wrong in op -; cs:"+cs+" and text:"+str);
+//       }
+//       strIter.skip(op.chars);
+//       break;
+//     case '=':
+//       //op is = and op.lines 0: no newlines must be in the copied string
+//       //op is = and op.lines >0: op.lines newlines must be in the copied string
+//       if(op.lines != strIter.peek(op.chars).split("\n").length - 1){
+//         throw new Error("newline count is wrong in op =; cs:"+cs+" and text:"+str);
+//       }
+//       assem.append(strIter.take(op.chars));
+//       break;
+//     }
+//   }
+//   assem.append(strIter.take(strIter.remaining()));
+//   return assem.toString();
+// };
 
 /**
  * applies a changeset on an array of lines
