@@ -551,21 +551,21 @@ exports.opAssembler = function () {
 /**
  * A custom made StringBuffer 
  */
-exports.stringAssembler = function () {
-  var pieces = [];
-
-  function append(x) {
-    pieces.push(String(x));
-  }
-
-  function toString() {
-    return pieces.join('');
-  }
-  return {
-    append: append,
-    toString: toString
-  };
-};
+// exports.stringAssembler = function () {
+//   var pieces = [];
+//
+//   function append(x) {
+//     pieces.push(String(x));
+//   }
+//
+//   function toString() {
+//     return pieces.join('');
+//   }
+//   return {
+//     append: append,
+//     toString: toString
+//   };
+// };
 
 /**
  * This class allows to iterate and modify texts which have several lines
