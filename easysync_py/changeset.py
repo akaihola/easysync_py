@@ -79,7 +79,7 @@ class OpIterator:
         """Create an iterator which decodes string changeset operations
 
         ..note:: :func:`iterate_ops` below is a Pythonic generator version of
-                 this class.
+                 this class. This class should be removed in the future.
 
         :param opsStr: String encoding of the change operations to be performed
         :param optStartIndex: from where in the string should the iterator
@@ -592,11 +592,11 @@ def applyToText(cs: str, text: str) -> str:
     unpacked = unpack(cs)
     assert_(len(text) == unpacked['oldLen'],
             'mismatched apply: ', len(text), ' / ', unpacked['oldLen'])
-    csIter = OpIterator(unpacked['ops'])
+    ops = iterate_ops(unpacked['ops'])
     bankIter = StringIterator(unpacked['charBank'])
     strIter = StringIterator(text)
     assem = []
-    for op in csIter:
+    for op in ops:
         if op.opcode == '+':
             # op is + and op.lines 0:
             # -> no newlines must be in op.chars
@@ -639,10 +639,10 @@ def mutateTextLines(cs: str, lines: List[str]) -> None:
 
     """
     unpacked = unpack(cs)
-    csIter = OpIterator(unpacked['ops'])
+    ops = iterate_ops(unpacked['ops'])
     bankIter = StringIterator(unpacked['charBank'])
     mut = TextLinesMutator(lines)
-    for op in csIter:
+    for op in ops:
         if op.opcode == '+':
             mut.insert(bankIter.take(op.chars), op.lines)
         elif op.opcode == '-':

@@ -166,11 +166,9 @@ def test_generate_changesets():
 
 @pytest.mark.skip
 def test_generate_ops():
+    """Helper used for converting original test data"""
     for _, unpacked, _, _ in CHANGESETS:
-        op_iterator = py.OpIterator(unpacked['ops'])
-        ops = []
-        while op_iterator.hasNext():
-            ops.append(op_iterator.next(py.Op()))
+        ops = list(py.iterate_ops(unpacked['ops']))
         print(f'({unpacked["ops"]!r}, {ops!r}),')
 
 
