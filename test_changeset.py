@@ -285,6 +285,13 @@ def test_op_iterator(ops, expect):
     assert result == expect
 
 
+@pytest.mark.parametrize('ops, expect', OPS)
+def test_iterate_ops(ops, expect):
+    result = list(py.iterate_ops(ops))
+
+    assert result == expect
+
+
 @pytest.mark.parametrize(
     'changeset, old_text, expect',
     [('Z:1>1*0+1$A', TEXT[:0], TEXT[:1]),

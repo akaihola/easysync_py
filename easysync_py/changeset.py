@@ -1,7 +1,7 @@
 import re
 import string
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, Generator, List, Optional, Tuple, Union
 
 from js2py.base import HJs, JsObjectWrapper
 from pkg_resources import resource_filename
@@ -69,9 +69,17 @@ changeset.numToString = HJs(numToString)
 #changeset.newLen = HJs(newLen)
 
 
+OP_REGEX = re.compile(r'((?:\*[0-9a-z]+)*)(?:\|([0-9a-z]+))?([-+=])([0-9a-z]+)'
+                      r'|\?'
+                      r'|')
+
+
 class OpIterator:
     def __init__(self, opsStr: str, optStartIndex: int = 0):
         """Create an iterator which decodes string changeset operations
+
+        ..note:: :func:`iterate_ops` below is a Pythonic generator version of
+                 this class.
 
         :param opsStr: String encoding of the change operations to be performed
         :param optStartIndex: from where in the string should the iterator
@@ -80,10 +88,6 @@ class OpIterator:
 
         """
         self.opsStr = opsStr
-        self.regex = re.compile(
-            r'((?:\*[0-9a-z]+)*)(?:\|([0-9a-z]+))?([-+=])([0-9a-z]+)'
-            r'|\?'
-            r'|')
         self.startIndex = optStartIndex or 0
         self.curIndex = self.startIndex
         self.prevIndex = self.curIndex
@@ -93,7 +97,7 @@ class OpIterator:
     def nextRegexMatch(self):
         self.prevIndex = self.curIndex
         regex_lastIndex = self.curIndex
-        result = self.regex.search(self.opsStr, pos=regex_lastIndex)
+        result = OP_REGEX.search(self.opsStr, pos=regex_lastIndex)
         self.curIndex = result.end()
         if result.group(0) == '?':
             error('Hit error opcode in op stream')
@@ -178,6 +182,35 @@ changeset.clearOp = HJs(Op.clear)
 changeset.newOp = HJs(Op)
 changeset.cloneOp = HJs(Op.clone)
 changeset.copyOp = HJs(Op.copy_op)
+
+
+def iterate_ops(ops: str, start_index: int = 0) -> Generator[Op, None, None]:
+    """Pythonic version of ``OpIterator``
+
+    A generator which decodes string changeset operations
+
+    :param ops: String encoding of the change operations to be performed
+    :param start_index: from where in the string should the generator start
+    :return: a generator for :class:`Op` objects
+
+    """
+    cur_index = start_index or 0
+
+    while True:
+        match = OP_REGEX.search(ops, pos=cur_index)
+        cur_index = match.end()
+        if not match.group(0):
+            break
+        if match.group(0) == '?':
+            error('Hit error opcode in op stream')
+        opcode = match.group(3)
+        if not opcode:
+            break
+        op = Op(opcode=opcode,
+                attribs=match.group(1),
+                lines=parseNum(match.group(2) or '0'),
+                chars=parseNum(match.group(4)))
+        yield op
 
 
 # changeset.opString = HJs(opString)
