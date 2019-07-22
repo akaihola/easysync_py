@@ -1,4 +1,5 @@
 from textwrap import dedent
+from typing import List, Tuple
 
 import pytest
 from js2py.base import to_python, PyJsString
@@ -421,6 +422,32 @@ def test_mutation():
          "eggplant\n"])
 
 
+def mutations_to_ops(mutations) -> Tuple[List[py.Op], str]:
+    ops = []
+    char_bank = []
+    for mutation in mutations:
+        if mutation[0] == 'insert':
+            text = mutation[1]
+            op = py.Op(opcode='+',
+                       chars=len(text),
+                       lines=text.count('\n'))
+            char_bank.append(text)
+        elif mutation[0] == 'remove':
+            op = py.Op(opcode='-',
+                       chars=mutation[1],
+                       lines=mutation[2] if len(mutation) >= 3 else 0)
+            if len(mutation) >= 4:
+                op.check = mutation[3]
+        elif mutation[0] == 'skip':
+            op = py.Op(opcode='=',
+                       chars=mutation[1],
+                       lines=mutation[2] if len(mutation) >= 3 else 0)
+        else:
+            raise ValueError(f'Invalid mutation "{mutation[0]}"')
+        ops.append(op)
+    return ops, ''.join(char_bank)
+
+
 @pytest.mark.parametrize(
     'original, mutations, expect_mutated, expect_changes',
     [(["apple\n",
@@ -571,7 +598,8 @@ def test_mutation(original, mutations, expect_mutated, expect_changes):
     print(f'Original: {original}')
     print(f'Mutations: {mutations}')
     print(f'Expect: {expect_mutated}')
-    result, changes = py.mutate(original, mutations)
+    ops, char_bank = mutations_to_ops(mutations)
+    result, changes = py.mutate(original, ops, char_bank)
     print(f'Got: {result}')
     assert result == expect_mutated
     assert changes == expect_changes

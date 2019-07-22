@@ -723,13 +723,37 @@ def parse_remove_skip_args(opcode, num_chars, num_lines=0, *args):
         return num_chars, num_lines, parse_skip_args(*args)
 
 
+def ops_to_mutations(ops: List[Op], char_bank: str) -> List[List]:
+    char_index = 0
+    for op in ops:
+        if op.opcode == '+':
+            text = char_bank[char_index:char_index + op.chars]
+            char_index += op.chars
+            mutation = ['insert', text]
+            num_lines = text.count('\n')
+            if num_lines:
+                mutation.append(num_lines)
+        elif op.opcode == '-':
+            mutation = ['remove', op.chars, op.lines]
+            if hasattr(op, 'check'):
+                mutation.append(op.check)
+        elif op.opcode == '=':
+            mutation = ['skip', op.chars]
+            if op.lines:
+                mutation.append(op.lines)
+        else:
+            raise EasySyncError(f'Invalid opcode "{op.opcode}"')
+        yield mutation
+
+
 def mutate(original: List[str],
-           ops: List[Tuple[Union[str, int]]]) -> Tuple[List[str],
-                                                       List]:
+           ops: List[Op],
+           char_bank: str) -> Tuple[List[str], List]:
     mutated = []
     changes = []
     orig_linenum = 0
     orig_column = 0
+    mutations = ops_to_mutations(ops, char_bank)
 
     def copy(chars_to_copy: str):
         if not mutated or mutated[-1].endswith('\n'):
@@ -737,8 +761,8 @@ def mutate(original: List[str],
         else:
             mutated[-1] += chars_to_copy
 
-    while ops:
-        opcode, *args = ops.pop(0)
+    for mutation in mutations:
+        opcode, *args = mutation
         prev_orig_linenum = orig_linenum
         prev_len_mutated = len(mutated)
         was_inside_line = (prev_len_mutated
